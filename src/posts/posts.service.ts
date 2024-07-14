@@ -4,13 +4,19 @@ import { currentUser } from 'src/users/dto/current-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post } from './entities/post.entity';
 import mongoose, { Model } from 'mongoose';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectModel(Post.name) private readonly PostModel: Model<Post>,
+    @Inject(forwardRef(() => UsersService))
     private UsersService: UsersService,
   ) {}
   async create(createPostDto: CreatePostDto, currentUser: currentUser) {
@@ -42,11 +48,22 @@ export class PostsService {
     });
   }
 
-  update(id: mongoose.Schema.Types.ObjectId, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+  async update(
+    id: mongoose.Schema.Types.ObjectId,
+    updatePostDto: UpdatePostDto,
+  ) {
+    const obj = await this.PostModel.findById(id);
+    if (!obj) throw new BadRequestException('There is no post with this Id');
+    await this.PostModel.findByIdAndUpdate(id, updatePostDto);
+    return 'Post updated Successfully';
   }
 
-  remove(id: mongoose.Schema.Types.ObjectId) {
-    return `This action removes a #${id} post`;
+  async remove(id: mongoose.Schema.Types.ObjectId) {
+    await this.UsersService.removeFromParent(id);
+    await this.PostModel.findByIdAndDelete(id);
+    return 'Post deleted Successfully';
+  }
+  async reset(id: mongoose.Schema.Types.ObjectId) {
+    return this.PostModel.deleteMany({ author: id });
   }
 }
