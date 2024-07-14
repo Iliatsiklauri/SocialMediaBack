@@ -3,7 +3,8 @@ import mongoose, { Document } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Post extends Document {
-  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
+  id: mongoose.Schema.Types.ObjectId;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   author: mongoose.Schema.Types.ObjectId;
   @Prop({ default: 'No Image' })
   imageUrl: string;
