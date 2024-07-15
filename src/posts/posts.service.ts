@@ -11,6 +11,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
+import { CommentsService } from 'src/comments/comments.service';
 
 @Injectable()
 export class PostsService {
@@ -18,6 +19,8 @@ export class PostsService {
     @InjectModel(Post.name) private readonly PostModel: Model<Post>,
     @Inject(forwardRef(() => UsersService))
     private UsersService: UsersService,
+    @Inject(forwardRef(() => CommentsService))
+    private CommentsService: CommentsService,
   ) {}
   async create(createPostDto: CreatePostDto, currentUser: currentUser) {
     if (!createPostDto.content && !createPostDto.imageUrl)
@@ -65,5 +68,10 @@ export class PostsService {
   }
   async reset(id: mongoose.Schema.Types.ObjectId) {
     return this.PostModel.deleteMany({ author: id });
+  }
+  async addComment(postId, commentId) {
+    // const user = await this.PostModel.findById(postId);
+    // if (!user) throw new BadRequestException('');
+    // const comment = await th;
   }
 }

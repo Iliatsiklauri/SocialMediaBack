@@ -9,6 +9,8 @@ export class Comment extends Document {
   content: string;
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   likes: mongoose.Schema.Types.ObjectId[];
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Post', required: true })
+  postId: mongoose.Schema.Types.ObjectId;
 }
 
 export const CommentSchema = SchemaFactory.createForClass(Comment);
