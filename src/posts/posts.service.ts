@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { CommentsService } from 'src/comments/comments.service';
+import path from 'path';
 
 @Injectable()
 export class PostsService {
@@ -30,25 +31,25 @@ export class PostsService {
       author: currentUser.id,
     });
     await this.UsersService.addPost(currentUser.id, post.id);
-
     return 'post created successfully';
   }
 
   async findAll() {
-    return await this.PostModel.find().populate({
-      path: 'author',
-      select: 'name lastname profilePicture',
-    });
+    return await this.PostModel.find().populate([
+      { path: 'author', select: 'name lastname' },
+      {
+        path: 'comments',
+        select: 'author content',
+        populate: { path: 'author', select: 'name lastname' },
+      },
+    ]);
   }
 
   async findOne(id: mongoose.Schema.Types.ObjectId) {
     const post = await this.PostModel.findById(id);
     if (!post)
       throw new BadRequestException('Post does not exist with this id');
-    return post.populate({
-      path: 'author',
-      select: 'name lastname profilePicture',
-    });
+    return post;
   }
 
   async update(
@@ -62,16 +63,45 @@ export class PostsService {
   }
 
   async remove(id: mongoose.Schema.Types.ObjectId) {
+    const obj = await this.PostModel.findById(id);
+    if (!obj)
+      throw new BadRequestException(
+        'Cannot delete because post does not exist ',
+      );
     await this.UsersService.removeFromParent(id);
     await this.PostModel.findByIdAndDelete(id);
+    await this.CommentsService.postDeleted(id);
     return 'Post deleted Successfully';
   }
   async reset(id: mongoose.Schema.Types.ObjectId) {
     return this.PostModel.deleteMany({ author: id });
   }
-  async addComment(postId, commentId) {
-    // const user = await this.PostModel.findById(postId);
-    // if (!user) throw new BadRequestException('');
-    // const comment = await th;
+
+  async addComment(
+    postId: mongoose.Schema.Types.ObjectId,
+    commentId: mongoose.Schema.Types.ObjectId,
+  ) {
+    const post = await this.PostModel.findById(postId);
+    post.comments.push(commentId);
+    post.save();
+
+    return 'Successfully added commentId in Posts comments array';
+  }
+  async findPostByCommentId(id: mongoose.Schema.Types.ObjectId) {
+    const post = await this.PostModel.findOne({ comments: id });
+    return post;
+  }
+
+  async removeComment(postId: mongoose.Schema.Types.ObjectId, commentId: any) {
+    const post = await this.PostModel.findById(postId);
+    if (!post)
+      throw new BadRequestException('Post does not exist with this id');
+    const index = post.comments.indexOf(commentId);
+    if (index == -1) throw new BadRequestException('comment not found');
+
+    post.comments.splice(index, 1);
+    await post.save();
+
+    return 'Successfully removed commentId from Post comments array';
   }
 }

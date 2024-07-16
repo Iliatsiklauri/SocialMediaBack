@@ -11,6 +11,7 @@ import { User } from './entities/user.entity';
 import mongoose, { Model } from 'mongoose';
 import { updatePictureDto } from './dto/update-profilePicture.dto';
 import { PostsService } from 'src/posts/posts.service';
+import { CommentsService } from 'src/comments/comments.service';
 
 @Injectable()
 export class UsersService {
@@ -18,6 +19,8 @@ export class UsersService {
     @InjectModel(User.name) private readonly UserModel: Model<User>,
     @Inject(forwardRef(() => PostsService))
     private PostService: PostsService,
+    @Inject(forwardRef(() => CommentsService))
+    private CommentsService: CommentsService,
   ) {}
   create(createUserDto: CreateUserDto) {
     return this.UserModel.create(createUserDto);
@@ -30,11 +33,31 @@ export class UsersService {
   }
 
   async findOne(id: mongoose.Schema.Types.ObjectId) {
-    const user = await this.UserModel.findById(id).select(
-      'name lastname email id createdAt posts profilePicture friends',
-    );
+    const user = await this.UserModel.findById(id)
+      .select('-password')
+      .populate([
+        {
+          path: 'posts',
+          populate: [
+            {
+              path: 'comments',
+              select: 'author content',
+              populate: [
+                {
+                  path: 'author',
+                  select: 'name lastname',
+                },
+              ],
+            },
+            {
+              path: 'author',
+              select: 'name lastname',
+            },
+          ],
+        },
+      ]);
     if (!user) throw new BadRequestException('user does not exist');
-    return user.populate({ path: 'posts' });
+    return user;
   }
 
   async update(
@@ -59,8 +82,9 @@ export class UsersService {
       throw new BadRequestException(
         'Cannot delete because user does not exist',
       );
-    await this.UserModel.findByIdAndDelete(id);
     await this.PostService.reset(id);
+    await this.CommentsService.userDeleted(id);
+    await this.UserModel.findByIdAndDelete(id);
     return 'User Deleted Successfully';
   }
 
@@ -90,6 +114,7 @@ export class UsersService {
     if (!user)
       throw new BadRequestException('User does not exist with this id');
     user.posts.push(postId);
+    console.log(user.posts);
     user.save();
     return 'Post added successfully';
   }
@@ -97,7 +122,6 @@ export class UsersService {
   async removeFromParent(postId: mongoose.Schema.Types.ObjectId) {
     const user = await this.UserModel.findOne({ posts: postId });
     const index = user.posts.findIndex((el) => el == postId);
-    console.log(user, 'user');
     user.posts.splice(index, 1);
     return 'Successfully removed post from user';
   }

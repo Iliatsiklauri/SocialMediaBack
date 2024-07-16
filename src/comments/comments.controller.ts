@@ -42,17 +42,20 @@ export class CommentsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.commentsService.findOne(+id);
+  findOne(@Param('id') id: mongoose.Schema.Types.ObjectId) {
+    return this.commentsService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCommentDto: UpdateCommentDto) {
-    return this.commentsService.update(+id, updateCommentDto);
+  update(
+    @Param('id') id: mongoose.Schema.Types.ObjectId,
+    @Body() updateCommentDto: UpdateCommentDto,
+  ) {
+    return this.commentsService.update(id, updateCommentDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.commentsService.remove(+id);
+  remove(@Param('id') id: mongoose.Schema.Types.ObjectId) {
+    return this.commentsService.remove(id);
   }
 }

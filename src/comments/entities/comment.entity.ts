@@ -3,6 +3,7 @@ import mongoose, { Document } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Comment extends Document {
+  id: mongoose.Schema.Types.ObjectId;
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   author: mongoose.Schema.Types.ObjectId;
   @Prop({ required: true })
