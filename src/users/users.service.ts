@@ -68,6 +68,7 @@ export class UsersService {
 
   //! add + update functions
 
+  // TODO password update case
   async update(
     id: mongoose.Schema.Types.ObjectId,
     updateUserDto: UpdateUserDto,
@@ -83,7 +84,6 @@ export class UsersService {
     );
     return 'User updated Successfully';
   }
-
   async updateProfilePicture(
     id: mongoose.Schema.Types.ObjectId,
     updatePictureDto: updatePictureDto,
