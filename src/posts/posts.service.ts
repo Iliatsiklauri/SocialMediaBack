@@ -84,6 +84,16 @@ export class PostsService {
     return 'Successfully added commentId in Posts comments array';
   }
 
+  async findPostByCommentAndUpdate(commentId: mongoose.Schema.Types.ObjectId) {
+    const post = await this.PostModel.findOne({ comments: commentId });
+    const index = post.comments.findIndex((el) => el == commentId);
+    if (index == -1)
+      throw new BadRequestException('Comment is not available with this id');
+    post.comments.splice(index, 1);
+    await post.save();
+    return 'Comment removed from post succesfully';
+  }
+
   //! delete functions
 
   async deletePost(id: mongoose.Schema.Types.ObjectId) {
@@ -106,13 +116,6 @@ export class PostsService {
     await this.PostModel.deleteMany({ author: userId });
   }
 
-  async deletePostWithUser(userId: mongoose.Schema.Types.ObjectId) {
-    const posts = await this.PostModel.find({ author: userId });
-    if (!posts.length) return;
-
-    return this.PostModel.deleteMany({ author: userId });
-  }
-
   //! helper function of delete
 
   async removeComment(
@@ -130,14 +133,5 @@ export class PostsService {
     post.comments.splice(index, 1);
     await post.save();
     return 'Successfully removed comment from post comments array';
-  }
-  async findPostByCommentAndUpdate(commentId: mongoose.Schema.Types.ObjectId) {
-    const post = await this.PostModel.findOne({ comments: commentId });
-    const index = post.comments.findIndex((el) => el == commentId);
-    if (index == -1)
-      throw new BadRequestException('Comment is not available with this id');
-    post.comments.splice(index, 1);
-    await post.save();
-    return 'Comment removed from post succesfully';
   }
 }
