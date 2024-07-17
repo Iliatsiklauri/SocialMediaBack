@@ -28,6 +28,10 @@ export class PostsController {
   ) {
     return this.postsService.create(createPostDto, currentUser);
   }
+  @Post(':id')
+  like() {
+    return 'like';
+  }
 
   @Get()
   findAll() {
