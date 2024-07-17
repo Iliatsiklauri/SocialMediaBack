@@ -44,7 +44,7 @@ export class UsersController {
   @UseGuards(authGuard)
   @Delete(':id')
   remove(@Param('id') id: mongoose.Schema.Types.ObjectId) {
-    return this.usersService.remove(id);
+    return this.usersService.removeUserAndItsContent(id);
   }
 
   @UseGuards(authGuard)

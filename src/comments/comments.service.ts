@@ -14,6 +14,8 @@ import { PostsService } from 'src/posts/posts.service';
 import { authGuard } from 'src/auth/auth.guard';
 import { UsersService } from 'src/users/users.service';
 import path from 'path';
+import { User } from 'src/users/entities/user.entity';
+import { Scheduler } from 'timers/promises';
 
 @UseGuards(authGuard)
 @Injectable()
@@ -25,6 +27,36 @@ export class CommentsService {
     @Inject(forwardRef(() => UsersService))
     private readonly UsersService: UsersService,
   ) {}
+
+  //! read functions
+
+  findAll() {
+    return this.CommentsModel.find().populate([
+      {
+        path: 'postId',
+        select: 'content author',
+        populate: {
+          path: 'author',
+          select: 'name lastname',
+        },
+      },
+      {
+        path: 'author',
+        select: 'name lastname profilePicture',
+      },
+    ]);
+  }
+
+  async findOne(id: mongoose.Schema.Types.ObjectId) {
+    const comment = await this.CommentsModel.findById(id);
+    if (!comment) throw new BadRequestException('comment not available');
+    return comment;
+  }
+  async findCommentsByUser(userId: mongoose.Schema.Types.ObjectId) {
+    return this.CommentsModel.find({ author: userId });
+  }
+
+  //! add + update functions
 
   async create(
     createCommentDto: CreateCommentDto,
@@ -47,19 +79,6 @@ export class CommentsService {
     return 'Comment created Successfully';
   }
 
-  findAll() {
-    return this.CommentsModel.find().populate({
-      path: 'postId author',
-      select: 'content imageUrl name lastname author',
-    });
-  }
-
-  async findOne(id: mongoose.Schema.Types.ObjectId) {
-    const comment = await this.CommentsModel.findById(id);
-    if (!comment) throw new BadRequestException('comment not available');
-    return comment;
-  }
-
   async update(
     id: mongoose.Schema.Types.ObjectId,
     updateCommentDto: UpdateCommentDto,
@@ -67,23 +86,29 @@ export class CommentsService {
     const comment = await this.CommentsModel.findById(id);
     if (!comment) throw new BadRequestException('comment not available');
     await this.CommentsModel.findByIdAndUpdate(id, updateCommentDto);
-    return `This action updates a #${id} comment`;
+    return `Comment updates Successfully`;
   }
 
-  async remove(id: mongoose.Schema.Types.ObjectId) {
-    return;
-  }
-  async postDeleted(id: mongoose.Schema.Types.ObjectId) {
-    await this.CommentsModel.deleteMany({ postId: id });
-    return 'success';
-  }
-  async userDeleted(id: mongoose.Schema.Types.ObjectId) {
-    const comments = await this.CommentsModel.find({ author: id });
-    if (!comments) throw new BadRequestException('no comments');
+  //! delete functions
+
+  async deleteUsersCommentsOnOtherPosts(
+    userId: mongoose.Schema.Types.ObjectId,
+  ) {
+    const comments = await this.CommentsModel.find({ author: userId });
     for (const comment of comments) {
-      await this.PostsService.removeComment(comment.postId, comment._id);
+      await this.PostsService.removeComment(comment.postId, comment.id);
     }
-    await this.CommentsModel.deleteMany({ author: id });
-    return 'User comments deleted successfully';
+    await this.CommentsModel.deleteMany({ author: userId });
+  }
+
+  async deleteCommentsWithPost(postId: mongoose.Schema.Types.ObjectId) {
+    await this.CommentsModel.deleteMany({ postId });
+  }
+
+  async deleteSingleComment(commentId: mongoose.Schema.Types.ObjectId) {
+    const comment = await this.CommentsModel.findById(commentId);
+    if (!comment) throw new BadRequestException('no comment with this id');
+    await this.PostsService.findPostByCommentAndUpdate(commentId);
+    return 'Comment deleted Successfully';
   }
 }

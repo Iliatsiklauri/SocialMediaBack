@@ -49,6 +49,6 @@ export class PostsController {
 
   @Delete(':id')
   remove(@Param('id') id: mongoose.Schema.Types.ObjectId) {
-    return this.postsService.remove(id);
+    return this.postsService.deletePost(id);
   }
 }

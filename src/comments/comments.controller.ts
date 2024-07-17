@@ -56,6 +56,6 @@ export class CommentsController {
 
   @Delete(':id')
   remove(@Param('id') id: mongoose.Schema.Types.ObjectId) {
-    return this.commentsService.remove(id);
+    return;
   }
 }
