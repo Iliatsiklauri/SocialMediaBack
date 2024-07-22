@@ -109,7 +109,60 @@ export class UsersService {
     recieverId: mongoose.Schema.Types.ObjectId,
     senderId: mongoose.Schema.Types.ObjectId,
   ) {
-    return { recieverId, senderId };
+    validateObjectId(senderId);
+    validateObjectId(recieverId);
+    const sender = await this.UserModel.findById(senderId);
+    const reciever = await this.UserModel.findById(recieverId);
+    if (!sender || !reciever) throw new BadRequestException('User not found');
+
+    if (reciever.friends.includes(senderId))
+      throw new BadRequestException('User is already your friend');
+
+    if (!reciever.friendRequests.includes(senderId))
+      throw new BadRequestException('User request not found');
+
+    let requestIndex = reciever.friendRequests.findIndex(
+      (el) => el == senderId,
+    );
+    if (requestIndex === -1)
+      throw new BadRequestException('Friend request not found');
+
+    reciever.friends.push(senderId);
+    sender.friends.push(recieverId);
+    reciever.friendRequests.splice(requestIndex, 1);
+
+    await reciever.save();
+    await sender.save();
+    return {
+      sender: sender.name,
+      reciever: reciever.name,
+      message: 'Successfully accepted request',
+    };
+  }
+
+  async declineRequest(
+    senderId: mongoose.Schema.Types.ObjectId,
+    recieverId: mongoose.Schema.Types.ObjectId,
+  ) {
+    validateObjectId(senderId);
+    validateObjectId(recieverId);
+    const sender = await this.UserModel.findById(senderId);
+    const reciever = await this.UserModel.findById(recieverId);
+    if (!sender || !reciever) throw new BadRequestException('User not found');
+
+    if (!reciever.friendRequests.includes(senderId))
+      throw new BadRequestException('User request not found');
+
+    if (reciever.friends.includes(senderId))
+      throw new BadRequestException('User is already your friend');
+
+    let requestIndex = reciever.friendRequests.findIndex(
+      (req) => req == senderId,
+    );
+    reciever.friendRequests.splice(requestIndex, 1);
+    await reciever.save();
+
+    return 'declinded request successfuly';
   }
 
   async updateNameorLastname(

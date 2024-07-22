@@ -71,7 +71,7 @@ export class UsersController {
   @UseGuards(authGuard)
   @Post('/send-request/:id')
   sendRequest(
-    @CurrentUser()
+    @CurrentUser('id')
     senderId: {
       id: mongoose.Schema.Types.ObjectId;
     },
@@ -83,12 +83,24 @@ export class UsersController {
   @UseGuards(authGuard)
   @Patch('/accept-request/:id')
   acceptRequest(
-    @CurrentUser()
+    @CurrentUser('id')
     recieverId: {
       id: mongoose.Schema.Types.ObjectId;
     },
     @Param('id') senderId: mongoose.Schema.Types.ObjectId,
   ) {
     return this.usersService.acceptRequest(recieverId.id, senderId);
+  }
+
+  @UseGuards(authGuard)
+  @Patch('/decline-request/:id')
+  declineRequest(
+    @CurrentUser('id')
+    recieverId: {
+      id: mongoose.Schema.Types.ObjectId;
+    },
+    @Param('id') senderId: mongoose.Schema.Types.ObjectId,
+  ) {
+    return this.usersService.declineRequest(senderId, recieverId.id);
   }
 }
