@@ -47,6 +47,7 @@ export class CommentsService {
   }
 
   async findOne(id: mongoose.Schema.Types.ObjectId) {
+    validateObjectId(id);
     const comment = await this.CommentsModel.findById(id);
     if (!comment) throw new BadRequestException('comment not available');
     return comment;
@@ -64,6 +65,8 @@ export class CommentsService {
       id: mongoose.Schema.Types.ObjectId;
     },
   ) {
+    validateObjectId(userId);
+    validateObjectId(postId.id);
     const user = await this.UsersService.findOne(userId);
     const post = await this.PostsService.findOne(postId.id);
     if (!user || !post) throw new BadRequestException('Invalid post or user');
@@ -82,6 +85,7 @@ export class CommentsService {
     id: mongoose.Schema.Types.ObjectId,
     updateCommentDto: UpdateCommentDto,
   ) {
+    validateObjectId(id);
     const comment = await this.CommentsModel.findById(id);
     if (!comment) throw new BadRequestException('comment not available');
     await this.CommentsModel.findByIdAndUpdate(id, updateCommentDto);
@@ -115,6 +119,7 @@ export class CommentsService {
   async deleteUsersCommentsOnOtherPosts(
     userId: mongoose.Schema.Types.ObjectId,
   ) {
+    validateObjectId(userId);
     const comments = await this.CommentsModel.find({ author: userId });
     for (const comment of comments) {
       await this.PostsService.removeComment(comment.postId, comment.id);
@@ -127,9 +132,22 @@ export class CommentsService {
   }
 
   async deleteSingleComment(commentId: mongoose.Schema.Types.ObjectId) {
+    validateObjectId(commentId);
     const comment = await this.CommentsModel.findById(commentId);
     if (!comment) throw new BadRequestException('no comment with this id');
     await this.PostsService.findPostByCommentAndUpdate(commentId);
-    return 'Comment deleted Successfully';
+    await this.CommentsModel.findByIdAndDelete(commentId);
+    return 'comment deleted successfully';
+  }
+  async deleteCommentLikesWithUser(id: mongoose.Schema.Types.ObjectId) {
+    validateObjectId(id);
+    const comments = await this.CommentsModel.find({ likes: id });
+    for (const comment of comments) {
+      let index = comment.likes.findIndex((like) => like == id);
+      if (index !== -1) {
+        comment.likes.splice(index, 1);
+        await comment.save();
+      }
+    }
   }
 }

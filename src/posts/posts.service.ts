@@ -133,6 +133,18 @@ export class PostsService {
 
   //! delete functions
 
+  async deleteLikesWithUser(id: mongoose.Schema.Types.ObjectId) {
+    validateObjectId(id);
+    const posts = await this.PostModel.find({ likes: id });
+    for (const post of posts) {
+      let index = post.likes.findIndex((like) => like == id);
+      if (index !== -1) {
+        post.likes.splice(index, 1);
+        await post.save();
+      }
+    }
+  }
+
   async deletePost(id: mongoose.Schema.Types.ObjectId) {
     validateObjectId(id);
     const obj = await this.PostModel.findById(id);

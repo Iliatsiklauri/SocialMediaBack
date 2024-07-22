@@ -159,7 +159,12 @@ export class UsersService {
 
     await this.CommentsService.deleteUsersCommentsOnOtherPosts(userId);
 
+    await this.PostService.deleteLikesWithUser(userId);
+
+    await this.CommentsService.deleteCommentLikesWithUser(userId);
+
     await this.UserModel.findByIdAndDelete(userId);
+
     return 'User Deleted Successfully';
   }
 }
