@@ -3,7 +3,7 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { currentUser } from 'src/users/dto/current-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post } from './entities/post.entity';
-import mongoose, { isValidObjectId, Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import {
   BadRequestException,
   forwardRef,
@@ -51,12 +51,12 @@ export class PostsService {
   }
 
   async findPostsByUser(userId: mongoose.Schema.Types.ObjectId) {
-    isValidObjectId(userId);
+    validateObjectId(userId);
     return this.PostModel.find({ author: userId });
   }
 
   async findPostByCommentId(userId: mongoose.Schema.Types.ObjectId) {
-    isValidObjectId(userId);
+    validateObjectId(userId);
     const posts = await this.PostModel.find({ comments: userId });
     return posts;
   }
@@ -126,7 +126,7 @@ export class PostsService {
   //! delete functions
 
   async deletePost(id: mongoose.Schema.Types.ObjectId) {
-    isValidObjectId(id);
+    validateObjectId(id);
     const obj = await this.PostModel.findById(id);
     if (!obj)
       throw new BadRequestException(
@@ -139,7 +139,7 @@ export class PostsService {
   }
 
   async deletePostsWithUser(userId: mongoose.Schema.Types.ObjectId) {
-    isValidObjectId(userId);
+    validateObjectId(userId);
     const posts = await this.PostModel.find({ author: userId });
     for (const post of posts) {
       await this.CommentsService.deleteCommentsWithPost(post.id);
@@ -153,8 +153,8 @@ export class PostsService {
     postId: mongoose.Schema.Types.ObjectId,
     commentId: mongoose.Schema.Types.ObjectId,
   ) {
-    isValidObjectId(postId);
-    isValidObjectId(commentId);
+    validateObjectId(postId);
+    validateObjectId(commentId);
     const post = await this.PostModel.findById(postId);
     if (!post)
       throw new BadRequestException('Post does not exist with this id');

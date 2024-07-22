@@ -14,6 +14,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import mongoose from 'mongoose';
 import { authGuard } from 'src/auth/auth.guard';
 import { updatePictureDto } from './dto/update-profilePicture.dto';
+import { updatePasswordDto } from './dto/update-password.dto';
 
 @Controller('users')
 export class UsersController {
@@ -39,7 +40,7 @@ export class UsersController {
     @Param('id') id: mongoose.Schema.Types.ObjectId,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.usersService.update(id, updateUserDto);
+    return this.usersService.updateNameorLastname(id, updateUserDto);
   }
   @UseGuards(authGuard)
   @Delete(':id')
@@ -54,5 +55,14 @@ export class UsersController {
     @Body() updatePictureDto: updatePictureDto,
   ) {
     return this.usersService.updateProfilePicture(id, updatePictureDto);
+  }
+
+  @UseGuards(authGuard)
+  @Patch(':id/password')
+  updatePassword(
+    @Param('id') id,
+    @Body('password') password: updatePasswordDto,
+  ) {
+    return this.usersService.updatePassword(id, password);
   }
 }
