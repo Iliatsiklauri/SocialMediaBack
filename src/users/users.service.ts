@@ -155,13 +155,13 @@ export class UsersService {
       throw new BadRequestException(
         'Cannot delete because user does not exist',
       );
-    await this.PostService.deletePostsWithUser(userId);
-
-    await this.CommentsService.deleteUsersCommentsOnOtherPosts(userId);
+    await this.CommentsService.deleteCommentLikesWithUser(userId);
 
     await this.PostService.deleteLikesWithUser(userId);
 
-    await this.CommentsService.deleteCommentLikesWithUser(userId);
+    await this.CommentsService.deleteUsersCommentsOnOtherPosts(userId);
+
+    await this.PostService.deletePostsWithUser(userId);
 
     await this.UserModel.findByIdAndDelete(userId);
 
