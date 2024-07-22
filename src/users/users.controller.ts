@@ -16,7 +16,6 @@ import { authGuard } from 'src/auth/auth.guard';
 import { updatePictureDto } from './dto/update-profilePicture.dto';
 import { updatePasswordDto } from './dto/update-password.dto';
 import { CurrentUser } from './users.decorator';
-import { currentUser } from './dto/current-user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -102,5 +101,17 @@ export class UsersController {
     @Param('id') senderId: mongoose.Schema.Types.ObjectId,
   ) {
     return this.usersService.declineRequest(senderId, recieverId.id);
+  }
+
+  @UseGuards(authGuard)
+  @Delete('/remove-friend/:id')
+  removeFriend(
+    @CurrentUser('id')
+    recieverId: {
+      id: mongoose.Schema.Types.ObjectId;
+    },
+    @Param('id') senderId: mongoose.Schema.Types.ObjectId,
+  ) {
+    return this.usersService.removeFriend(senderId, recieverId.id);
   }
 }

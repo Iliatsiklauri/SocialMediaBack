@@ -86,81 +86,89 @@ export class UsersService {
 
   async sendRequest(
     senderId: mongoose.Schema.Types.ObjectId,
-    recieverId: mongoose.Schema.Types.ObjectId,
+    receiverId: mongoose.Schema.Types.ObjectId,
   ) {
     validateObjectId(senderId);
-    validateObjectId(recieverId);
+    validateObjectId(receiverId);
 
     const sender = await this.UserModel.findById(senderId);
-    const reciever = await this.UserModel.findById(recieverId);
-    if (!sender || !reciever) throw new BadRequestException('User not found');
+    const receiver = await this.UserModel.findById(receiverId);
 
-    if (reciever.friendRequests.includes(senderId))
+    if (receiverId == senderId)
+      throw new BadRequestException('Cannot send request to yourself');
+
+    if (!sender || !receiver) throw new BadRequestException('User not found');
+
+    if (sender.friendRequests.includes(receiverId))
+      throw new BadRequestException('User already sent you friend request');
+
+    if (receiver.friendRequests.includes(senderId))
       throw new BadRequestException('Friend request is already sent');
-    if (reciever.friends.includes(senderId))
+
+    if (receiver.friends.includes(senderId))
       throw new BadRequestException('User is already your friend');
 
-    reciever.friendRequests.push(senderId);
-    await reciever.save();
+    receiver.friendRequests.push(senderId);
+    await receiver.save();
     return 'friend request is sent successfully';
   }
 
   async acceptRequest(
-    recieverId: mongoose.Schema.Types.ObjectId,
+    receiverId: mongoose.Schema.Types.ObjectId,
     senderId: mongoose.Schema.Types.ObjectId,
   ) {
     validateObjectId(senderId);
-    validateObjectId(recieverId);
+    validateObjectId(receiverId);
     const sender = await this.UserModel.findById(senderId);
-    const reciever = await this.UserModel.findById(recieverId);
-    if (!sender || !reciever) throw new BadRequestException('User not found');
+    const receiver = await this.UserModel.findById(receiverId);
+    if (!sender || !receiver) throw new BadRequestException('User not found');
 
-    if (reciever.friends.includes(senderId))
+    if (receiver.friends.includes(senderId))
       throw new BadRequestException('User is already your friend');
 
-    if (!reciever.friendRequests.includes(senderId))
+    if (!receiver.friendRequests.includes(senderId))
       throw new BadRequestException('User request not found');
 
-    let requestIndex = reciever.friendRequests.findIndex(
+    let requestIndex = receiver.friendRequests.findIndex(
       (el) => el == senderId,
     );
     if (requestIndex === -1)
       throw new BadRequestException('Friend request not found');
 
-    reciever.friends.push(senderId);
-    sender.friends.push(recieverId);
-    reciever.friendRequests.splice(requestIndex, 1);
+    receiver.friends.push(senderId);
+    sender.friends.push(receiverId);
+    receiver.friendRequests.splice(requestIndex, 1);
 
-    await reciever.save();
+    await receiver.save();
     await sender.save();
     return {
       sender: sender.name,
-      reciever: reciever.name,
+      receiver: receiver.name,
       message: 'Successfully accepted request',
     };
   }
 
   async declineRequest(
     senderId: mongoose.Schema.Types.ObjectId,
-    recieverId: mongoose.Schema.Types.ObjectId,
+    receiverId: mongoose.Schema.Types.ObjectId,
   ) {
     validateObjectId(senderId);
-    validateObjectId(recieverId);
+    validateObjectId(receiverId);
     const sender = await this.UserModel.findById(senderId);
-    const reciever = await this.UserModel.findById(recieverId);
-    if (!sender || !reciever) throw new BadRequestException('User not found');
+    const receiver = await this.UserModel.findById(receiverId);
+    if (!sender || !receiver) throw new BadRequestException('User not found');
 
-    if (!reciever.friendRequests.includes(senderId))
+    if (!receiver.friendRequests.includes(senderId))
       throw new BadRequestException('User request not found');
 
-    if (reciever.friends.includes(senderId))
+    if (receiver.friends.includes(senderId))
       throw new BadRequestException('User is already your friend');
 
-    let requestIndex = reciever.friendRequests.findIndex(
+    let requestIndex = receiver.friendRequests.findIndex(
       (req) => req == senderId,
     );
-    reciever.friendRequests.splice(requestIndex, 1);
-    await reciever.save();
+    receiver.friendRequests.splice(requestIndex, 1);
+    await receiver.save();
 
     return 'declinded request successfuly';
   }
@@ -228,6 +236,35 @@ export class UsersService {
 
   //! delete functions
 
+  async removeFriend(
+    senderId: mongoose.Schema.Types.ObjectId,
+    receiverId: mongoose.Schema.Types.ObjectId,
+  ) {
+    validateObjectId(senderId);
+    validateObjectId(receiverId);
+    const sender = await this.UserModel.findById(senderId);
+    const receiver = await this.UserModel.findById(receiverId);
+    if (!sender || !receiver) throw new BadRequestException('User not found');
+    if (
+      !sender.friends.includes(receiverId) ||
+      !receiver.friends.includes(senderId)
+    )
+      throw new BadRequestException(
+        'Cannot remove user because you are not friends',
+      );
+
+    let senderindex = receiver.friends.findIndex((req) => req == senderId);
+    let receiverIndex = sender.friends.findIndex((req) => req == receiverId);
+
+    receiver.friends.splice(senderindex, 1);
+    sender.friends.splice(receiverIndex, 1);
+
+    await receiver.save();
+    await sender.save();
+
+    return 'removed friend successfully';
+  }
+
   async removePostFromParent(postId: mongoose.Schema.Types.ObjectId) {
     validateObjectId(postId);
     const user = await this.UserModel.findOne({ posts: postId });
@@ -235,6 +272,31 @@ export class UsersService {
     user.posts.splice(index, 1);
     await user.save();
     return 'Successfully removed post from user';
+  }
+
+  async removeUserFromFriends(userId: mongoose.Schema.Types.ObjectId) {
+    validateObjectId(userId);
+    const user = await this.UserModel.findById(userId);
+    if (!user) throw new BadRequestException('user not found');
+    const friends = await this.UserModel.find({ friends: userId });
+    const requestedFriends = await this.UserModel.find({
+      friendRequests: userId,
+    });
+    for (const friend of requestedFriends) {
+      let index = friend.friendRequests.findIndex((el) => el == userId);
+      if (index !== -1) {
+        friend.friendRequests.splice(index, 1);
+        await friend.save();
+      }
+    }
+    for (const friend of friends) {
+      let index = friend.friends.findIndex((el) => el == userId);
+      if (index !== -1) {
+        friend.friends.splice(index, 1);
+        await friend.save();
+      }
+    }
+    return 'Successfully removed user from others friends list';
   }
 
   async removeUserAndItsContent(userId: mongoose.Schema.Types.ObjectId) {
@@ -251,6 +313,8 @@ export class UsersService {
     await this.CommentsService.deleteUsersCommentsOnOtherPosts(userId);
 
     await this.PostService.deletePostsWithUser(userId);
+
+    await this.removeUserFromFriends(userId);
 
     await this.UserModel.findByIdAndDelete(userId);
 
