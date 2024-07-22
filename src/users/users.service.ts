@@ -8,10 +8,11 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './entities/user.entity';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { isValidObjectId, Model } from 'mongoose';
 import { updatePictureDto } from './dto/update-profilePicture.dto';
 import { PostsService } from 'src/posts/posts.service';
 import { CommentsService } from 'src/comments/comments.service';
+import path from 'path';
 
 @Injectable()
 export class UsersService {
@@ -35,6 +36,7 @@ export class UsersService {
   }
 
   async findOne(id: mongoose.Schema.Types.ObjectId) {
+    isValidObjectId(id);
     const user = await this.UserModel.findById(id)
       .select('-password')
       .populate([
@@ -55,6 +57,10 @@ export class UsersService {
               path: 'author',
               select: 'name lastname',
             },
+            {
+              path: 'likes',
+              select: 'name lastname',
+            },
           ],
         },
       ]);
@@ -73,6 +79,7 @@ export class UsersService {
     id: mongoose.Schema.Types.ObjectId,
     updateUserDto: UpdateUserDto,
   ) {
+    isValidObjectId(id);
     const user = await this.UserModel.findById(id);
     if (!user)
       throw new BadRequestException(
@@ -84,10 +91,12 @@ export class UsersService {
     );
     return 'User updated Successfully';
   }
+
   async updateProfilePicture(
     id: mongoose.Schema.Types.ObjectId,
     updatePictureDto: updatePictureDto,
   ) {
+    isValidObjectId(id);
     const user = await this.UserModel.findById(id);
     if (!user)
       throw new BadRequestException(
@@ -102,6 +111,8 @@ export class UsersService {
     userId: mongoose.Schema.Types.ObjectId,
     postId: mongoose.Schema.Types.ObjectId,
   ) {
+    isValidObjectId(userId);
+    isValidObjectId(postId);
     const user = await this.UserModel.findById(userId);
     if (!user)
       throw new BadRequestException('User does not exist with this id');
@@ -113,6 +124,7 @@ export class UsersService {
   //! delete functions
 
   async removePostFromParent(postId: mongoose.Schema.Types.ObjectId) {
+    isValidObjectId(postId);
     const user = await this.UserModel.findOne({ posts: postId });
     const index = user.posts.findIndex((el) => el == postId);
     user.posts.splice(index, 1);
@@ -121,6 +133,7 @@ export class UsersService {
   }
 
   async removeUserAndItsContent(userId: mongoose.Schema.Types.ObjectId) {
+    isValidObjectId(userId);
     const user = await this.UserModel.findById(userId);
     if (!user)
       throw new BadRequestException(
