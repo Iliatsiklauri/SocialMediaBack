@@ -13,8 +13,8 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { authGuard } from 'src/auth/auth.guard';
 import { CurrentUser } from 'src/users/users.decorator';
+import mongoose, { mongo, Mongoose } from 'mongoose';
 import { currentUser } from 'src/users/dto/current-user.dto';
-import mongoose from 'mongoose';
 
 @UseGuards(authGuard)
 @Controller('posts')
@@ -28,9 +28,16 @@ export class PostsController {
   ) {
     return this.postsService.create(createPostDto, currentUser);
   }
-  @Post(':id')
-  like() {
-    return 'like';
+
+  @Post('/like/:id')
+  like(
+    @Param('id') id: mongoose.Schema.Types.ObjectId,
+    @CurrentUser() currentUser: currentUser,
+  ) {
+    return this.postsService.likeAPost({
+      postId: id,
+      userId: currentUser.id,
+    });
   }
 
   @Get()

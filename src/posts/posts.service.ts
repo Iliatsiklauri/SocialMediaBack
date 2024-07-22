@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { CommentsService } from 'src/comments/comments.service';
+import { likePost } from './dto/like-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -22,16 +23,6 @@ export class PostsService {
     @Inject(forwardRef(() => CommentsService))
     private CommentsService: CommentsService,
   ) {}
-  async create(createPostDto: CreatePostDto, currentUser: currentUser) {
-    if (!createPostDto.content && !createPostDto.imageUrl)
-      throw new BadRequestException('Either image or title must be provided');
-    const post = await this.PostModel.create({
-      ...createPostDto,
-      author: currentUser.id,
-    });
-    await this.UsersService.addPost(currentUser.id, post.id);
-    return 'post created successfully';
-  }
 
   //! read functions
 
@@ -42,6 +33,10 @@ export class PostsService {
         path: 'comments',
         select: 'author content',
         populate: { path: 'author', select: 'name lastname' },
+      },
+      {
+        path: 'likes',
+        select: 'name id',
       },
     ]);
   }
@@ -62,6 +57,17 @@ export class PostsService {
     return posts;
   }
   //! add + update functions
+
+  async create(createPostDto: CreatePostDto, currentUser: currentUser) {
+    if (!createPostDto.content && !createPostDto.imageUrl)
+      throw new BadRequestException('Either image or title must be provided');
+    const post = await this.PostModel.create({
+      ...createPostDto,
+      author: currentUser.id,
+    });
+    await this.UsersService.addPost(currentUser.id, post.id);
+    return 'post created successfully';
+  }
 
   async update(
     id: mongoose.Schema.Types.ObjectId,
@@ -92,6 +98,21 @@ export class PostsService {
     post.comments.splice(index, 1);
     await post.save();
     return 'Comment removed from post succesfully';
+  }
+
+  async likeAPost(likePost: likePost) {
+    const post = await this.PostModel.findById(likePost.postId);
+    if (!post) throw new BadRequestException();
+    let index = post.likes.findIndex((el) => el == likePost.userId);
+
+    if (post.likes.includes(likePost.userId)) {
+      post.likes.splice(index, 1);
+      await post.save();
+      return 'unlike';
+    }
+    post.likes.push(likePost.userId);
+    await post.save();
+    return 'like';
   }
 
   //! delete functions
