@@ -14,6 +14,7 @@ import { UsersService } from 'src/users/users.service';
 import { CommentsService } from 'src/comments/comments.service';
 import { likePost } from './dto/like-post.dto';
 import { validateObjectId } from 'src/utils';
+import path from 'path';
 
 @Injectable()
 export class PostsService {
@@ -32,8 +33,14 @@ export class PostsService {
       { path: 'author', select: 'name lastname' },
       {
         path: 'comments',
-        select: 'author content',
-        populate: { path: 'author', select: 'name lastname' },
+        select: 'author content likes',
+        populate: [
+          { path: 'author', select: 'name lastname' },
+          {
+            path: 'likes',
+            select: 'name lastname',
+          },
+        ],
       },
       {
         path: 'likes',
@@ -118,6 +125,7 @@ export class PostsService {
       await post.save();
       return 'unlike';
     }
+
     post.likes.push(likePost.userId);
     await post.save();
     return 'like';

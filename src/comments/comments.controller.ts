@@ -53,6 +53,13 @@ export class CommentsController {
   ) {
     return this.commentsService.update(id, updateCommentDto);
   }
+  @Post('/like/:id')
+  likeComment(@Param('id') commentId, @CurrentUser() currentUser: currentUser) {
+    return this.commentsService.likeComment({
+      commentId,
+      userId: currentUser.id,
+    });
+  }
 
   @Delete(':id')
   remove(@Param('id') id: mongoose.Schema.Types.ObjectId) {

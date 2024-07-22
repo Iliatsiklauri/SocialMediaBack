@@ -8,7 +8,7 @@ export class Comment extends Document {
   author: mongoose.Schema.Types.ObjectId;
   @Prop({ required: true })
   content: string;
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
   likes: mongoose.Schema.Types.ObjectId[];
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Post', required: true })
   postId: mongoose.Schema.Types.ObjectId;

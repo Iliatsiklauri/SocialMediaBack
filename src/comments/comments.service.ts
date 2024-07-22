@@ -13,9 +13,8 @@ import mongoose, { Model } from 'mongoose';
 import { PostsService } from 'src/posts/posts.service';
 import { authGuard } from 'src/auth/auth.guard';
 import { UsersService } from 'src/users/users.service';
-import path from 'path';
-import { User } from 'src/users/entities/user.entity';
-import { Scheduler } from 'timers/promises';
+import { commentLike } from './dto/like-comment.dto';
+import { validateObjectId } from 'src/utils';
 
 @UseGuards(authGuard)
 @Injectable()
@@ -87,6 +86,28 @@ export class CommentsService {
     if (!comment) throw new BadRequestException('comment not available');
     await this.CommentsModel.findByIdAndUpdate(id, updateCommentDto);
     return `Comment updates Successfully`;
+  }
+  async likeComment(likeComment: commentLike) {
+    validateObjectId(likeComment.commentId);
+    validateObjectId(likeComment.userId);
+
+    const user = await this.UsersService.findOne(likeComment.userId);
+    if (!user) throw new BadRequestException('User not available for comment');
+
+    const comment = await this.CommentsModel.findById(likeComment.commentId);
+    if (!comment) throw new BadRequestException('comment not available');
+
+    let index = comment.likes.findIndex((el) => el == likeComment.userId);
+    if (comment.likes.includes(likeComment.userId)) {
+      comment.likes.splice(index, 1);
+      await comment.save();
+      return 'unlike';
+    }
+
+    comment.likes.push(likeComment.userId);
+    await comment.save();
+
+    return 'like';
   }
 
   //! delete functions
