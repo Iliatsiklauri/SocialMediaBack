@@ -65,6 +65,14 @@ export class UsersService {
             },
           ],
         },
+        {
+          path: 'friendRequests',
+          select: 'name lastname',
+        },
+        {
+          path: 'friends',
+          select: 'name lastname',
+        },
       ]);
     if (!user) throw new BadRequestException('user does not exist');
     return user;
@@ -75,6 +83,34 @@ export class UsersService {
   }
 
   //! add + update functions
+
+  async sendRequest(
+    senderId: mongoose.Schema.Types.ObjectId,
+    recieverId: mongoose.Schema.Types.ObjectId,
+  ) {
+    validateObjectId(senderId);
+    validateObjectId(recieverId);
+
+    const sender = await this.UserModel.findById(senderId);
+    const reciever = await this.UserModel.findById(recieverId);
+    if (!sender || !reciever) throw new BadRequestException('User not found');
+
+    if (reciever.friendRequests.includes(senderId))
+      throw new BadRequestException('Friend request is already sent');
+    if (reciever.friends.includes(senderId))
+      throw new BadRequestException('User is already your friend');
+
+    reciever.friendRequests.push(senderId);
+    await reciever.save();
+    return 'friend request is sent successfully';
+  }
+
+  async acceptRequest(
+    recieverId: mongoose.Schema.Types.ObjectId,
+    senderId: mongoose.Schema.Types.ObjectId,
+  ) {
+    return { recieverId, senderId };
+  }
 
   async updateNameorLastname(
     id: mongoose.Schema.Types.ObjectId,

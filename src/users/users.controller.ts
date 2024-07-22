@@ -15,6 +15,8 @@ import mongoose from 'mongoose';
 import { authGuard } from 'src/auth/auth.guard';
 import { updatePictureDto } from './dto/update-profilePicture.dto';
 import { updatePasswordDto } from './dto/update-password.dto';
+import { CurrentUser } from './users.decorator';
+import { currentUser } from './dto/current-user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -64,5 +66,29 @@ export class UsersController {
     @Body('password') password: updatePasswordDto,
   ) {
     return this.usersService.updatePassword(id, password);
+  }
+
+  @UseGuards(authGuard)
+  @Post('/send-request/:id')
+  sendRequest(
+    @CurrentUser()
+    senderId: {
+      id: mongoose.Schema.Types.ObjectId;
+    },
+    @Param('id') recieverId: mongoose.Schema.Types.ObjectId,
+  ) {
+    return this.usersService.sendRequest(senderId.id, recieverId);
+  }
+
+  @UseGuards(authGuard)
+  @Patch('/accept-request/:id')
+  acceptRequest(
+    @CurrentUser()
+    recieverId: {
+      id: mongoose.Schema.Types.ObjectId;
+    },
+    @Param('id') senderId: mongoose.Schema.Types.ObjectId,
+  ) {
+    return this.usersService.acceptRequest(recieverId.id, senderId);
   }
 }

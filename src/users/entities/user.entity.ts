@@ -17,6 +17,8 @@ export class User extends Document {
   friends: mongoose.Schema.Types.ObjectId[];
   @Prop({ type: String, default: '' })
   profilePicture: string;
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
+  friendRequests: mongoose.Schema.Types.ObjectId[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
