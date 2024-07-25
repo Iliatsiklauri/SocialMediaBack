@@ -5,7 +5,6 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
-import { MessagesModule } from './messages/messages.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -14,7 +13,6 @@ import { MessagesModule } from './messages/messages.module';
     UsersModule,
     PostsModule,
     CommentsModule,
-    MessagesModule,
   ],
   controllers: [],
   providers: [],
