@@ -15,6 +15,7 @@ import { CommentsService } from 'src/comments/comments.service';
 import { updatePasswordDto } from './dto/update-password.dto';
 import { validateObjectId } from 'src/utils';
 import * as bcrypt from 'bcrypt';
+import { AwsService } from 'src/posts/aws.service';
 
 @Injectable()
 export class UsersService {
@@ -24,6 +25,7 @@ export class UsersService {
     private PostService: PostsService,
     @Inject(forwardRef(() => CommentsService))
     private CommentsService: CommentsService,
+    private AwsService: AwsService,
   ) {}
   create(createUserDto: CreateUserDto) {
     return this.UserModel.create(createUserDto);
@@ -202,7 +204,7 @@ export class UsersService {
       );
     user.profilePicture = updatePictureDto.profilePicture;
     await user.save();
-    return 'User Deleted Succesfully';
+    return 'User Updated Succesfully';
   }
   async updatePassword(
     id: mongoose.Schema.Types.ObjectId,
@@ -306,6 +308,9 @@ export class UsersService {
       throw new BadRequestException(
         'Cannot delete because user does not exist',
       );
+
+    await this.AwsService.deleteImage(user.profilePicture);
+
     await this.CommentsService.deleteCommentLikesWithUser(userId);
 
     await this.PostService.deleteLikesWithUser(userId);

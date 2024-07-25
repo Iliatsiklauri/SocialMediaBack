@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,11 +18,15 @@ import { authGuard } from 'src/auth/auth.guard';
 import { updatePictureDto } from './dto/update-profilePicture.dto';
 import { updatePasswordDto } from './dto/update-password.dto';
 import { CurrentUser } from './users.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { AwsService } from 'src/posts/aws.service';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
-
+  constructor(
+    private readonly usersService: UsersService,
+    private AwsService: AwsService,
+  ) {}
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
@@ -50,11 +56,14 @@ export class UsersController {
   }
 
   @UseGuards(authGuard)
-  @Patch(':id/profile-picture')
-  updateProfilePicture(
+  @Patch('/:id/profile-picture')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateProfilePicture(
+    @UploadedFile() file: Express.Multer.File,
     @Param('id') id,
     @Body() updatePictureDto: updatePictureDto,
   ) {
+    updatePictureDto.profilePicture = await this.AwsService.uploadImage(file);
     return this.usersService.updateProfilePicture(id, updatePictureDto);
   }
 

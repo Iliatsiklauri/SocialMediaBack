@@ -6,3 +6,8 @@ export function validateObjectId(id: any) {
     throw new BadRequestException(`Invalid ID format: ${id}`);
   }
 }
+
+export function extractKeyFromUrl(url: string): string {
+  const key = url.split('?')[0].split('/').slice(3).join('/');
+  return key;
+}

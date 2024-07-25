@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -15,17 +17,28 @@ import { authGuard } from 'src/auth/auth.guard';
 import { CurrentUser } from 'src/users/users.decorator';
 import mongoose, { mongo, Mongoose } from 'mongoose';
 import { currentUser } from 'src/users/dto/current-user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { AwsService } from './aws.service';
 
 @UseGuards(authGuard)
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(
+    private readonly postsService: PostsService,
+    private readonly AwsService: AwsService,
+  ) {}
 
   @Post()
-  create(
+  @UseInterceptors(FileInterceptor('file'))
+  async create(
+    @UploadedFile() file: Express.Multer.File,
     @Body() createPostDto: CreatePostDto,
     @CurrentUser() currentUser: currentUser,
   ) {
+    if (file) {
+      const imageUrl = await this.AwsService.uploadImage(file);
+      createPostDto.imageUrl = imageUrl;
+    }
     return this.postsService.create(createPostDto, currentUser);
   }
 

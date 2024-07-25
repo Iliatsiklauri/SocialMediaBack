@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Post, PostSchema } from './entities/post.entity';
 import { UsersModule } from 'src/users/users.module';
 import { CommentsModule } from 'src/comments/comments.module';
+import { AwsService } from './aws.service';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { CommentsModule } from 'src/comments/comments.module';
     forwardRef(() => CommentsModule),
   ],
   controllers: [PostsController],
-  providers: [PostsService],
-  exports: [PostsService],
+  providers: [PostsService, AwsService],
+  exports: [PostsService, AwsService],
 })
 export class PostsModule {}

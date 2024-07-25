@@ -14,7 +14,7 @@ import { UsersService } from 'src/users/users.service';
 import { CommentsService } from 'src/comments/comments.service';
 import { likePost } from './dto/like-post.dto';
 import { validateObjectId } from 'src/utils';
-import path from 'path';
+import { AwsService } from './aws.service';
 
 @Injectable()
 export class PostsService {
@@ -24,6 +24,7 @@ export class PostsService {
     private UsersService: UsersService,
     @Inject(forwardRef(() => CommentsService))
     private CommentsService: CommentsService,
+    private awsService: AwsService,
   ) {}
 
   //! read functions
@@ -152,6 +153,9 @@ export class PostsService {
       throw new BadRequestException(
         'Cannot delete because post does not exist ',
       );
+    if (obj.imageUrl !== 'No Image') {
+      await this.awsService.deleteImage(obj.imageUrl);
+    }
     await this.UsersService.removePostFromParent(id);
     await this.CommentsService.deleteCommentsWithPost(id);
     await this.PostModel.findByIdAndDelete(id);
@@ -163,6 +167,9 @@ export class PostsService {
     const posts = await this.PostModel.find({ author: userId });
     for (const post of posts) {
       await this.CommentsService.deleteCommentsWithPost(post.id);
+      if (post.imageUrl !== 'No Image') {
+        await this.awsService.deleteImage(post.imageUrl);
+      }
     }
     await this.PostModel.deleteMany({ author: userId });
   }
