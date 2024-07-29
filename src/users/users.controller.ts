@@ -20,7 +20,8 @@ import { updatePasswordDto } from './dto/update-password.dto';
 import { CurrentUser } from './users.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AwsService } from 'src/posts/aws.service';
-
+import { ApiTags } from '@nestjs/swagger';
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(

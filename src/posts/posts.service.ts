@@ -84,9 +84,12 @@ export class PostsService {
   async update(
     id: mongoose.Schema.Types.ObjectId,
     updatePostDto: UpdatePostDto,
+    currentUser: currentUser,
   ) {
     validateObjectId(id);
     const obj = await this.PostModel.findById(id);
+    if (obj.author != currentUser.id)
+      throw new BadRequestException('You cannnot update others posts');
     if (!obj) throw new BadRequestException('There is no post with this Id');
     await this.PostModel.findByIdAndUpdate(id, updatePostDto);
     return 'Post updated Successfully';
@@ -146,9 +149,14 @@ export class PostsService {
     }
   }
 
-  async deletePost(id: mongoose.Schema.Types.ObjectId) {
+  async deletePost(
+    id: mongoose.Schema.Types.ObjectId,
+    currentUser: currentUser,
+  ) {
     validateObjectId(id);
     const obj = await this.PostModel.findById(id);
+    if (obj.author != currentUser.id)
+      throw new BadRequestException('You cannnot delete others posts');
     if (!obj)
       throw new BadRequestException(
         'Cannot delete because post does not exist ',

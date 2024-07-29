@@ -19,7 +19,8 @@ import mongoose, { mongo, Mongoose } from 'mongoose';
 import { currentUser } from 'src/users/dto/current-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AwsService } from './aws.service';
-
+import { ApiTags } from '@nestjs/swagger';
+@ApiTags('Posts')
 @UseGuards(authGuard)
 @Controller('posts')
 export class PostsController {
@@ -67,12 +68,16 @@ export class PostsController {
   update(
     @Param('id') id: mongoose.Schema.Types.ObjectId,
     @Body() updatePostDto: UpdatePostDto,
+    @CurrentUser() currentUser: currentUser,
   ) {
-    return this.postsService.update(id, updatePostDto);
+    return this.postsService.update(id, updatePostDto, currentUser);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: mongoose.Schema.Types.ObjectId) {
-    return this.postsService.deletePost(id);
+  remove(
+    @Param('id') id: mongoose.Schema.Types.ObjectId,
+    @CurrentUser() currentUser: currentUser,
+  ) {
+    return this.postsService.deletePost(id, currentUser);
   }
 }

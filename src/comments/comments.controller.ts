@@ -15,6 +15,8 @@ import { authGuard } from 'src/auth/auth.guard';
 import { CurrentUser } from 'src/users/users.decorator';
 import { currentUser } from 'src/users/dto/current-user.dto';
 import mongoose from 'mongoose';
+import { ApiTags } from '@nestjs/swagger';
+@ApiTags('Comments')
 @UseGuards(authGuard)
 @Controller('comments')
 export class CommentsController {
