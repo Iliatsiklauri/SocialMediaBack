@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  Query,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -20,6 +21,7 @@ import { currentUser } from 'src/users/dto/current-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AwsService } from './aws.service';
 import { ApiTags } from '@nestjs/swagger';
+import { queryParams } from './dto/filter-post.dto';
 @ApiTags('Posts')
 @UseGuards(authGuard)
 @Controller('posts')
@@ -55,8 +57,8 @@ export class PostsController {
   }
 
   @Get()
-  findAll() {
-    return this.postsService.findAll();
+  findAll(@Query() query: queryParams) {
+    return this.postsService.findAll(query);
   }
 
   @Get(':id')
