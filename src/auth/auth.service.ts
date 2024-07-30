@@ -34,7 +34,7 @@ export class AuthService {
     if (!existingUser) throw new BadRequestException('User does not exist');
 
     const isPassEqual = await bcrypt.compare(password, existingUser.password);
-    if (!isPassEqual) throw new UnauthorizedException('incorect password');
+    if (!isPassEqual) throw new UnauthorizedException('incorrect password');
     const JwtPayload = {
       email: existingUser.email,
       id: existingUser.id,
