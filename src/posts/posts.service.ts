@@ -34,7 +34,7 @@ export class PostsService {
   async findAll(query: queryParams) {
     const page = query.page || 1;
     const perPage = query.perPage || 20;
-    return await this.PostModel.find()
+    const posts = await this.PostModel.find()
       .populate([
         { path: 'author', select: 'name lastname' },
         {
@@ -55,6 +55,7 @@ export class PostsService {
       ])
       .skip((query.page - 1) * query.perPage)
       .limit(query.perPage);
+    return await this.awsService.changeImageUrl(posts);
   }
 
   async findOne(id: mongoose.Schema.Types.ObjectId) {

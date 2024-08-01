@@ -8,6 +8,8 @@ export class Post extends Document {
   author: mongoose.Schema.Types.ObjectId;
   @Prop({ default: 'No Image' })
   imageUrl: string;
+  @Prop({ default: '' })
+  filePath: string;
   @Prop({ default: 'No Text' })
   content: string;
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
