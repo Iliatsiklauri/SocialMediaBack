@@ -9,6 +9,7 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { CommentsService } from 'src/comments/comments.service';
@@ -77,6 +78,9 @@ export class PostsService {
   //! add + update functions
 
   async create(createPostDto: CreatePostDto, currentUser: currentUser) {
+    const user = await this.UsersService.findOne(currentUser.id);
+    if (!user)
+      throw new UnauthorizedException('Unauthorized user can not create posts');
     if (!createPostDto.content && !createPostDto.imageUrl)
       throw new BadRequestException('Either image or title must be provided');
     const post = await this.PostModel.create({

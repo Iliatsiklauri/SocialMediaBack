@@ -30,6 +30,7 @@ export class AwsService {
     const param = {
       Key: filePath,
       Bucket: this.bucketName,
+      Expires: 100,
     };
     return this.storageService.getSignedUrlPromise('getObject', param);
   }

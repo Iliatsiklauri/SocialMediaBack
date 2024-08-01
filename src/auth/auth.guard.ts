@@ -28,6 +28,6 @@ export class authGuard implements CanActivate {
 
 function getToken(req) {
   if (!req.headers['authorization']) return null;
-  const token = req.headers['authorization'].split(' ')[1];
+  const token = req.headers['authorization'];
   return token;
 }
