@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -64,8 +65,15 @@ export class UsersController {
     @Param('id') id,
     @Body() updatePictureDto: updatePictureDto,
   ) {
-    updatePictureDto.profilePicture = await this.AwsService.uploadImage(file);
+    if (!file) throw new BadRequestException('No image provided');
+    updatePictureDto = await this.AwsService.uploadImage(file);
     return this.usersService.updateProfilePicture(id, updatePictureDto);
+  }
+
+  @UseGuards(authGuard)
+  @Delete('/:id/profile-picture')
+  async deleteProfilePicture(@Param('id') id) {
+    return this.usersService.deleteProfilePicture(id);
   }
 
   @UseGuards(authGuard)

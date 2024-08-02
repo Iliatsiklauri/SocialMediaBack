@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
-import { extractKeyFromUrl } from 'src/utils';
 import { Post } from './entities/post.entity';
+import { User } from 'src/users/entities/user.entity';
 @Injectable()
 export class AwsService {
   private bucketName;
@@ -16,11 +16,12 @@ export class AwsService {
     });
   }
 
+  //! upload image
   async uploadImage(file: Express.Multer.File) {
     const type = file.mimetype.split('/')[1];
     const filePath = `upload/${new Date().getTime()}.${type}`;
+    const imageUrl = `https://dv8x7zx2zd79g.cloudfront.net/${filePath}`;
 
-    //! upload image
     const config = {
       Key: filePath,
       Bucket: this.bucketName,
@@ -28,28 +29,14 @@ export class AwsService {
     };
 
     await this.storageService.putObject(config).promise();
-    return filePath;
-
-    //! retrieve image
-  }
-  async changeImageUrl(posts: Post[]) {
-    for (const post of posts) {
-      const param = {
-        Key: post.imageUrl,
-        Bucket: this.bucketName,
-      };
-      post.filePath = await this.storageService.getSignedUrlPromise(
-        'getObject',
-        param,
-      );
-    }
-    return posts;
+    return { imageUrl, filePath };
   }
 
-  async deleteImage(imageUrl: string) {
-    const key = extractKeyFromUrl(imageUrl);
+  //! delete image
+
+  async deleteImage(filePath: string) {
     const config = {
-      Key: key,
+      Key: filePath,
       Bucket: this.bucketName,
     };
 

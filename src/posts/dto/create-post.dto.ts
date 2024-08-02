@@ -11,4 +11,8 @@ export class CreatePostDto {
   @IsOptional()
   @IsString()
   imageUrl: string;
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  filePath: string;
 }

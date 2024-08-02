@@ -202,10 +202,12 @@ export class UsersService {
       throw new BadRequestException(
         'Cannot update because user does not exist',
       );
-    user.profilePicture = updatePictureDto.profilePicture;
+
+    user.profilePicture = updatePictureDto;
     await user.save();
     return 'User Updated Succesfully';
   }
+
   async updatePassword(
     id: mongoose.Schema.Types.ObjectId,
     password: updatePasswordDto,
@@ -237,6 +239,15 @@ export class UsersService {
   }
 
   //! delete functions
+  async deleteProfilePicture(id: mongoose.Schema.Types.ObjectId) {
+    validateObjectId(id);
+    const user = await this.UserModel.findById(id);
+    if (!user) throw new BadRequestException('No user with this id');
+    await this.AwsService.deleteImage(user.profilePicture.filePath);
+    user.profilePicture = { imageUrl: 'No Image', filePath: '' };
+    user.save();
+    return 'Image deleted successfully';
+  }
 
   async removeFriend(
     senderId: mongoose.Schema.Types.ObjectId,
@@ -309,7 +320,7 @@ export class UsersService {
         'Cannot delete because user does not exist',
       );
 
-    await this.AwsService.deleteImage(user.profilePicture);
+    await this.AwsService.deleteImage(user.profilePicture.filePath);
 
     await this.CommentsService.deleteCommentLikesWithUser(userId);
 

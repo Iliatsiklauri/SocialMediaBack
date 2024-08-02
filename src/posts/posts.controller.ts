@@ -31,6 +31,15 @@ export class PostsController {
     private readonly AwsService: AwsService,
   ) {}
 
+  @Get()
+  findAll(@Query() query: queryParams) {
+    return this.postsService.findAll(query);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: mongoose.Schema.Types.ObjectId) {
+    return this.postsService.findOne(id);
+  }
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   async create(
@@ -39,8 +48,9 @@ export class PostsController {
     @CurrentUser() currentUser: currentUser,
   ) {
     if (file) {
-      const imageUrl = await this.AwsService.uploadImage(file);
+      const { imageUrl, filePath } = await this.AwsService.uploadImage(file);
       createPostDto.imageUrl = imageUrl;
+      createPostDto.filePath = filePath;
     }
     return this.postsService.create(createPostDto, currentUser);
   }
@@ -54,16 +64,6 @@ export class PostsController {
       postId: id,
       userId: currentUser.id,
     });
-  }
-
-  @Get()
-  findAll(@Query() query: queryParams) {
-    return this.postsService.findAll(query);
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: mongoose.Schema.Types.ObjectId) {
-    return this.postsService.findOne(id);
   }
 
   @Patch(':id')

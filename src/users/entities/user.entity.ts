@@ -15,8 +15,11 @@ export class User extends Document {
   posts: mongoose.Schema.Types.ObjectId[];
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
   friends: mongoose.Schema.Types.ObjectId[];
-  @Prop({ type: String, default: '' })
-  profilePicture: string;
+  @Prop({ type: Object, default: { imageUrl: 'No Image', filePath: '' } })
+  profilePicture: {
+    imageUrl: string;
+    filePath: string;
+  };
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
   friendRequests: mongoose.Schema.Types.ObjectId[];
 }

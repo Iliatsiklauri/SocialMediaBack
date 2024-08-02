@@ -3,5 +3,7 @@ import { IsOptional } from 'class-validator';
 
 export class updatePictureDto {
   @ApiProperty()
-  profilePicture: string;
+  imageUrl: string;
+  @ApiProperty()
+  filePath: string;
 }

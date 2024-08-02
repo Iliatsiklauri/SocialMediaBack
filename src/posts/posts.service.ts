@@ -53,9 +53,9 @@ export class PostsService {
           select: 'name id',
         },
       ])
-      .skip((query.page - 1) * query.perPage)
-      .limit(query.perPage);
-    return await this.awsService.changeImageUrl(posts);
+      .skip((page - 1) * perPage)
+      .limit(perPage);
+    return posts;
   }
 
   async findOne(id: mongoose.Schema.Types.ObjectId) {
@@ -173,7 +173,7 @@ export class PostsService {
         'Cannot delete because post does not exist ',
       );
     if (obj.imageUrl !== 'No Image') {
-      await this.awsService.deleteImage(obj.imageUrl);
+      await this.awsService.deleteImage(obj.filePath);
     }
     await this.UsersService.removePostFromParent(id);
     await this.CommentsService.deleteCommentsWithPost(id);
@@ -187,7 +187,7 @@ export class PostsService {
     for (const post of posts) {
       await this.CommentsService.deleteCommentsWithPost(post.id);
       if (post.imageUrl !== 'No Image') {
-        await this.awsService.deleteImage(post.imageUrl);
+        await this.awsService.deleteImage(post.filePath);
       }
     }
     await this.PostModel.deleteMany({ author: userId });
