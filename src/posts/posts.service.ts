@@ -132,18 +132,18 @@ export class PostsService {
 
   async likeAPost(likePost: likePost) {
     const post = await this.PostModel.findById(likePost.postId);
-    if (!post) throw new BadRequestException();
+    if (!post) throw new BadRequestException('Could not find the post');
     let index = post.likes.findIndex((el) => el == likePost.userId);
 
     if (post.likes.includes(likePost.userId)) {
       post.likes.splice(index, 1);
       await post.save();
-      return 'unlike';
+      return { success: true, like: false };
     }
 
     post.likes.push(likePost.userId);
     await post.save();
-    return 'like';
+    return { success: true, like: true };
   }
 
   //! delete functions
