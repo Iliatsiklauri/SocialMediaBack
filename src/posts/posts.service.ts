@@ -17,6 +17,7 @@ import { likePost } from './dto/like-post.dto';
 import { validateObjectId } from 'src/utils';
 import { AwsService } from './aws.service';
 import { queryParams } from './dto/filter-post.dto';
+import path from 'path';
 
 @Injectable()
 export class PostsService {
@@ -36,12 +37,16 @@ export class PostsService {
     const perPage = query.perPage || 20;
     const posts = await this.PostModel.find()
       .populate([
-        { path: 'author', select: 'name lastname' },
+        { path: 'author', select: 'name lastname profilePicture' },
         {
           path: 'comments',
           select: 'author content likes',
           populate: [
-            { path: 'author', select: 'name lastname' },
+            {
+              path: 'author',
+              select: 'name lastname profilePicture',
+              populate: [{ path: 'profilePicture', select: 'imageUrl' }],
+            },
             {
               path: 'likes',
               select: 'name lastname',
