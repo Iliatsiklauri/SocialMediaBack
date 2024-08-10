@@ -40,6 +40,7 @@ export class PostsController {
   findOne(@Param('id') id: mongoose.Schema.Types.ObjectId) {
     return this.postsService.findOne(id);
   }
+
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   async create(

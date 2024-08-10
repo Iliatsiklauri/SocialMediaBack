@@ -60,7 +60,7 @@ export class PostsService {
       ])
       .skip((page - 1) * perPage)
       .limit(perPage);
-    return posts;
+    return posts.reverse();
   }
 
   async findOne(id: mongoose.Schema.Types.ObjectId) {

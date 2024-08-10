@@ -51,6 +51,7 @@ export class UsersController {
   ) {
     return this.usersService.updateNameorLastname(id, updateUserDto);
   }
+
   @UseGuards(authGuard)
   @Delete(':id')
   remove(@Param('id') id: mongoose.Schema.Types.ObjectId) {

@@ -319,8 +319,9 @@ export class UsersService {
       throw new BadRequestException(
         'Cannot delete because user does not exist',
       );
-
-    await this.AwsService.deleteImage(user.profilePicture.filePath);
+    if (user.profilePicture.filePath) {
+      await this.AwsService.deleteImage(user.profilePicture.filePath);
+    }
 
     await this.CommentsService.deleteCommentLikesWithUser(userId);
 
