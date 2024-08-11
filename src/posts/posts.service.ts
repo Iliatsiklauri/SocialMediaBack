@@ -55,7 +55,7 @@ export class PostsService {
         },
         {
           path: 'likes',
-          select: 'name id',
+          select: 'name id lastname',
         },
       ])
       .skip((page - 1) * perPage)
